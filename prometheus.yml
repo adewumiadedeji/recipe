@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:8000']
+  - job_name: 'recipe-service'
+    static_configs:
+      - targets: ['recipe-service:8001']
+  - job_name: 'ingredient-service'
+    static_configs:
+      - targets: ['ingredient-service:8002']

@@ -1,0 +1,172 @@
+version: '3'
+services:
+  gateway-service:
+    build: ./services/gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1/recipes/
+      - HOST_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+      - PYTHONPATH=shared
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/gateway/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  auth-service:
+    build: ./services/auth
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1/recipes/
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/auth/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  notification-service:
+    build: ./services/notification
+    ports:
+      - "8002:8000"
+    environment:
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=587
+      - SENDER_EMAIL=${SENDER_EMAIL}
+      - SENDER_PASSWORD=${SENDER_PASSWORD}
+    volumes:
+      - ./services/notification/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  recipe-service:
+    build: ./services/recipe
+    ports:
+      - "8003:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - AUTH_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/recipe/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  rating-service:
+    build: ./services/rating
+    ports:
+      - "8004:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/rating/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  ingredient-service:
+    build: ./services/ingredient
+    ports:
+      - "8005:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/ingredient/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  mealplan-service:
+    build: ./services/meal_plan
+    ports:
+      - "8006:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - AUTH_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+      - RECIPE_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./services/meal_plan/:/app/
+      - ./shared:/app/shared
+      - ./.env:/app/.env
+    networks:
+      - recipe-network
+
+  db:
+    image: mysql:${MYSQL_VERSION:-8.0}
+    command: --default-authentication-plugin=caching_sha2_password
+    restart: ${DOCKER_RESTART_POLICY:-unless-stopped}
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: recipe_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - ./shared/mysqldb:/var/lib/mysql
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol port
+      - "15672:15672"  # Management UI port
+    restart: unless-stopped
+
+
+volumes:
+  mysql_data:
+    name: recipe_management_mysql_data
+
+networks:
+  recipe-network:
+    driver: bridge
