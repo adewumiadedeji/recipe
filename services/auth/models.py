@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from typing import Optional
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from shared.database import Base
+from utils.database import Base
 
 
 class User(Base):

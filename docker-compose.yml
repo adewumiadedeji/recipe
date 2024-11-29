@@ -7,16 +7,20 @@ services:
     environment:
       - JWT_SECRET=${SECRET_KEY}
       - PYTHONUNBUFFERED=1
-      - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1/recipes/
-      - HOST_SERVICE_HOST_URL=http://auth-service:8000/api/v1
       - PYTHONPATH=shared
+      - AUTH_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+      - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1
+      - INGREDIENT_SERVICE_HOST_URL=http://ingredient-service:8000/api/v1
+      - MEALPLAN_SERVICE_HOST_URL=http://mealplan-service:8000/api/v1
+      - RATING_SERVICE_HOST_URL=http://rating-service:8000/api/v1
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/gateway/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -29,13 +33,14 @@ services:
       - JWT_SECRET=${SECRET_KEY}
       - PYTHONUNBUFFERED=1
       - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1/recipes/
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/auth/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -50,10 +55,12 @@ services:
       - SMTP_PORT=587
       - SENDER_EMAIL=${SENDER_EMAIL}
       - SENDER_PASSWORD=${SENDER_PASSWORD}
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/notification/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -66,13 +73,14 @@ services:
       - JWT_SECRET=${SECRET_KEY}
       - PYTHONUNBUFFERED=1
       - AUTH_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/recipe/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -85,13 +93,14 @@ services:
       - JWT_SECRET=${SECRET_KEY}
       - PYTHONUNBUFFERED=1
       - RECIPE_SERVICE_HOST_URL=http://recipe-service:8000/api/v1
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/rating/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -103,13 +112,14 @@ services:
       - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
       - JWT_SECRET=${SECRET_KEY}
       - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/ingredient/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -123,13 +133,14 @@ services:
       - PYTHONUNBUFFERED=1
       - AUTH_SERVICE_HOST_URL=http://auth-service:8000/api/v1
       - RECIPE_SERVICE_HOST_URL=http://auth-service:8000/api/v1
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./services/meal_plan/:/app/
-      - ./shared:/app/shared
-      - ./.env:/app/.env
     networks:
       - recipe-network
 
@@ -160,6 +171,13 @@ services:
     ports:
       - "5672:5672"    # AMQP protocol port
       - "15672:15672"  # Management UI port
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - recipe-network
     restart: unless-stopped
 
 

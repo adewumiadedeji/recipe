@@ -1,6 +1,6 @@
 import fastapi as _fastapi
 from router import router
-from shared.database import engine, Base
+from utils.database import engine, Base
 import logging
 import models as _models
 

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - name: gateway
+        image: deeaxfun2/gateway:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AUTH_SERVICE_HOST_URL
+          value: "http://192.168.194.36/api/v1"  # Simplified service URL
+        - name: RECIPE_SERVICE_HOST_URL
+          value: "http://192.168.194.28/api/v1"
+        - name: INGREDIENT_SERVICE_HOST_URL
+          value: "http://192.168.194.23/api/v1"
+        - name: MEALPLAN_SERVICE_HOST_URL
+          value: "http://192.168.194.26/api/v1"
+        - name: RATING_SERVICE_HOST_URL
+          value: "http://192.168.194.25/api/v1"
+        - name: NOTIFICATION_SERVICE_HOST_URL
+          value: "http://192.168.194.27"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: jwt-secret
+        - name: ALGORITHM
+          value: "HS256"
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          value: "30" 
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: MYSQL_HOST
+          value: "192.168.194.14"
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: MYSQL_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: database-name
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password

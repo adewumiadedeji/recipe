@@ -3,7 +3,7 @@ import os
 from typing import List
 from sqlalchemy import Column, Integer, DateTime, Date, DateTime, Enum
 import enum
-from shared.database import Base
+from utils.database import Base
 
 
 class Rating(Base):

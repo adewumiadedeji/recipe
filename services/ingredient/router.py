@@ -2,13 +2,13 @@ import os
 from typing import List
 from fastapi import HTTPException, APIRouter
 import fastapi as _fastapi
-from shared.email_service import send_email
+from utils.email_service import send_email
 import sqlalchemy.orm as _orm
 import models as _models
 import service as _services
 import schemas as _schemas
 import logging
-import shared.database as _database
+import utils.database as _database
 from starlette.responses import RedirectResponse
 import json
 
@@ -62,7 +62,7 @@ async def get_ingridient(
     ingredient_id: int,
     db: _orm.Session = _fastapi.Depends(_database.get_db)
 ):
-    return _services.get_ingridient(ingredient_id, db=db)
+    return await _services.get_ingredient(ingredient_id, db=db)
 
 @router.get("/ingredients", response_model=List[_schemas.Ingredient])
 async def list_recipes(
@@ -71,4 +71,4 @@ async def list_recipes(
     db: _orm.Session = _fastapi.Depends(_database.get_db)
 ):
    
-    return _services.guery_recipe(skip, limit, db=db)
+    return await _services.guery_ingredient(skip, limit, db=db)

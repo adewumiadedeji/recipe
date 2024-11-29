@@ -1,0 +1,176 @@
+version: "3.8"
+services:
+  auth:
+    image: deeaxfun2/auth:latest
+    container_name: auth_service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+  gateway:
+    image: deeaxfun2/gateway:latest
+    container_name: gateway_service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+
+  notification:
+    image: deeaxfun2/notification:latest
+    container_name: notification_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+
+  mealplan:
+    image: deeaxfun2/mealplan:latest
+    container_name: mealplan_service
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+  rating:
+    image: deeaxfun2/rating:latest
+    container_name: rating_service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+
+  recipe:
+    image: deeaxfun2/recipe:latest
+    container_name: recipe_service
+    ports:
+      - "8006:8006"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+  ingredient:
+    image: deeaxfun2/ingredient:latest
+    container_name: ingredient_service
+    ports:
+      - "8007:8007"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@db/$recipe_user
+      - JWT_SECRET=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - recipe-network
+
+
+  db:
+    image: mysql:${MYSQL_VERSION:-8.0}
+    command: --default-authentication-plugin=caching_sha2_password
+    restart: ${DOCKER_RESTART_POLICY:-unless-stopped}
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: recipe_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - ./shared/mysqldb:/var/lib/mysql
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol port
+      - "15672:15672"  # Management UI port
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - recipe-network
+    restart: unless-stopped
+
+
+volumes:
+  mysql_data:
+    name: recipe_management_mysql_data
+
+networks:
+  recipe-network:
+    driver: bridge

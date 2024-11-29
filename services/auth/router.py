@@ -1,13 +1,14 @@
+from datetime import datetime
 import os
 from typing import List
 from fastapi import HTTPException, APIRouter
 import fastapi as _fastapi
 import schemas as _schemas
-from shared.email_service import send_email
+from utils.email_service import send_email
 import sqlalchemy.orm as _orm
 import service as _services
 import logging
-import shared.database as _database
+import utils.database as _database
 from starlette.responses import RedirectResponse
 import json
 
@@ -38,24 +39,24 @@ async def create_user(
             detail="User with that email already exists")
 
     user = await _services.create_user(user=user, db=db)
-    success = send_email(
-        recipient=user.email, 
-        subject="User account activation", 
-        body="Your RECIPE user account has been created successfully\nPlease login to activate your account."
-    )
+    # success = send_email(
+    #     recipient=user.email, 
+    #     subject="User account activation", 
+    #     body="Your RECIPE user account has been created successfully\nPlease login to activate your account."
+    # )
     return _fastapi.HTTPException(
             status_code=201,
             detail="User Registered, Please verify email to activate account !")
 
 
-@router.post("/token" ,tags = ['User Auth'])
+@router.post("/auth/token" ,tags = ['User Auth'])
 async def generate_token(
     # form_data: _security.OAuth2PasswordRequestForm = _fastapi.Depends(), 
     user_data: _schemas.GenerateUserToken,
     db: _orm.Session = _fastapi.Depends(_database.get_db)):
     print("Login data: ", user_data)
     user = await _services.authenticate_user(email=user_data.email, password=user_data.password, db=db)
-
+    
     if user == "is_active_false":
         logging.info('Your email account is currently deactivated. Please contact admin to activate your account. ')
         raise _fastapi.HTTPException(
@@ -66,8 +67,9 @@ async def generate_token(
         raise _fastapi.HTTPException(
             status_code=401, detail="Invalid Credentials")
     
-    print("User object: ", user)
+    
     logging.info('Generating JWT Token')
+    
     return await _services.create_token(user=user)
 
 
@@ -75,7 +77,7 @@ async def generate_token(
 async def get_user(user: _schemas.User = _fastapi.Depends(_services.get_current_user)):
     return user
 
-@router.post("/users/generate-otp", response_model=str, tags=["User Auth"])
+@router.post("/auth/generate-otp", response_model=str, tags=["User Auth"])
 async def send_otp_mail(userdata: _schemas.GenerateOtp, db: _orm.Session = _fastapi.Depends(_database.get_db)):
     user = await _services.get_user_by_email(email=userdata.email, db=db)
 
@@ -99,7 +101,7 @@ async def send_otp_mail(userdata: _schemas.GenerateOtp, db: _orm.Session = _fast
     return "OTP sent to your email"
 
 
-@router.post("/users/verify_otp", tags=["User Auth"])
+@router.post("/auth/verify-otp", tags=["User Auth"])
 async def verify_otp(userdata: _schemas.VerifyOtp, db: _orm.Session = _fastapi.Depends(_database.get_db)):
     user = await _services.get_user_by_email(email=userdata.email, db=db )
 

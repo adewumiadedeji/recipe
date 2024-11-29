@@ -2,12 +2,12 @@ import os
 from typing import List
 from fastapi import HTTPException, APIRouter, Depends
 import fastapi as _fastapi
-from shared.email_service import send_email
+from utils.email_service import send_email
 import sqlalchemy.orm as _orm
 import service as _services
 import schemas as _schemas
 import logging
-import shared.database as _database
+import utils.database as _database
 from starlette.responses import RedirectResponse
 import json
 
@@ -44,13 +44,13 @@ async def create_recipe(
     try:
         # Get user ID from request state (set by auth middleware)
         user_id=await _services.get_current_user(AUTH_BASE_URL, token)
-        
+        print("User: ", user_id)
         # Create recipe
         db_recipe = await _services.create_recipe_in_db(
             db=db,
             recipe=recipe,
             user_id=user_id,
-            ingredient_ids=recipe.ingredients
+            # ingredient_ids=recipe.ingredients
         )
         
         return db_recipe
@@ -58,6 +58,7 @@ async def create_recipe(
     except HTTPException:
         raise
     except Exception as e:
+        print("Error: ", e)
         raise HTTPException(
             status_code=500,
             detail="An error occurred while creating the recipe"

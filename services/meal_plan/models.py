@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from sqlalchemy import Column, Integer, DateTime, Date, DateTime, Enum
 import enum
-from shared.database import Base
+from utils.database import Base
 
 
 class MealType(enum.Enum):

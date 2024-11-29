@@ -75,6 +75,7 @@ async def create_recipe_in_db(
         return db_recipe
     
     except SQLAlchemyError as e:
+        print(e)
         logger.error(f"Database error while creating recipe: {str(e)}")
         db.rollback()
         raise HTTPException(
@@ -82,6 +83,7 @@ async def create_recipe_in_db(
             detail="An error occurred while creating the recipe"
         )
     except Exception as e:
+        print(e)
         logger.error(f"Unexpected error while creating recipe: {str(e)}")
         db.rollback()
         raise HTTPException(

@@ -2,13 +2,13 @@ import os
 from typing import List
 from fastapi import HTTPException, APIRouter
 import fastapi as _fastapi
-from shared.email_service import send_email
+from utils.email_service import send_email
 import sqlalchemy.orm as _orm
 import service as _services
 import schemas as _schemas
 import models as _models
 import logging
-import shared.database as _database
+import utils.database as _database
 from starlette.responses import RedirectResponse
 import json
 

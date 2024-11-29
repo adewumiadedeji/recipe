@@ -5,16 +5,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from prometheus_client import make_asgi_app
 
-import requests
+
 import base64
 import pika
 import logging
 import os
 from jose import jwt
 import rpc_client
-import models as _models
 
-from shared.middleware import AuthMiddleware, MetricsMiddleware
+from utils.middleware import AuthMiddleware, MetricsMiddleware
+from routes.auth import auth_route
+from routes.ingredient import ing_route
+from routes.mealplan import meal_route
+from routes.recipe import recipe_route
+from routes.rating import rate_route
+from starlette.responses import RedirectResponse
 
 
 app = FastAPI(
@@ -43,14 +48,14 @@ logging.basicConfig(level=logging.INFO)
 
 # Retrieve environment variables
 JWT_SECRET = os.environ.get("JWT_SECRET")
-AUTH_BASE_URL = os.environ.get("AUTH_BASE_URL")
-RABBITMQ_URL = os.environ.get("RABBITMQ_URL") or "localhost"
+
+RABBITMQ_URL = os.environ.get("RABBITMQ_URL") or "192.168.117.2"
 
 # # Connect to RabbitMQ
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='192.168.117.2')) # add container name in docker
-channel = connection.channel()
-channel.queue_declare(queue='gatewayservice')
-channel.queue_declare(queue='authservice')
+# connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_URL)) # add container name in docker
+# channel = connection.channel()
+# channel.queue_declare(queue='gatewayservice')
+# channel.queue_declare(queue='authservice')
 
 
 # JWT token validation
@@ -66,63 +71,17 @@ async def jwt_validation(token: str = _fastapi.Depends(oauth2_scheme)):
 async def home():
     return "You are welcome my buddy."
 
+@app.get("/docs")
+async def docs():
+    return RedirectResponse(url="/docs/")
+
 # Authentication routes
-@app.get("/auth")
-async def authService():
-    try:
-        response = requests.get(f"{AUTH_BASE_URL}/api/v1")
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Authentication service is unavailable")
 
-@app.post("/auth/login", tags=['Authentication Service'])
-async def login(user_data: _models.UserCredentials):
-    try:
-        response = requests.post(f"{AUTH_BASE_URL}/api/v1/auth/token", json={"username": user_data.username, "password": user_data.password})
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Authentication service is unavailable")
-
-@app.post("/auth/register", tags=['Authentication Service'])
-async def registeration(user_data: _models.UserRegisteration):
-    
-    try:
-        response = requests.post(f"{os.getenv('HOST_SERVICE_HOST_URL')}/api/v1/auth/users", json={"name":user_data.name,"email": user_data.email, "password": user_data.password})
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Authentication service is unavailable")
-
-@app.post("/auth/generate_otp", tags=['Authentication Service'])
-async def generate_otp(user_data: _models.GenerateOtp):
-    try:
-        response = requests.post(f"{os.getenv('HOST_SERVICE_HOST_URL')}/api/v1/auth/users/generate_otp", json={"email":user_data.email})
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Authentication service is unavailable")
-
-@app.post("/auth/verify_otp", tags=['Authentication Service'])
-async def verify_otp(user_data: _models.VerifyOtp):
-    try:
-        response = requests.post(f"{os.getenv('HOST_SERVICE_HOST_URL')}/api/v1/auth/users/verify_otp", json={"email":user_data.email ,"otp":user_data.otp})
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Authentication service is unavailable")
-
+app.include_router(auth_route, prefix='/api/v1', tags=['Auth'])
+app.include_router(recipe_route, prefix='/api/v1', tags=['Recipe'])
+app.include_router(ing_route, prefix='/api/v1', tags=['Ingredient'])
+app.include_router(meal_route, prefix='/api/v1', tags=['Meal Plan'])
+app.include_router(rate_route, prefix='/api/v1', tags=['Ratings'])
 
 
 # ml microservice route - OCR route

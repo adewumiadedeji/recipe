@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: network-debug
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: network-debug
+  template:
+    metadata:
+      labels:
+        app: network-debug
+    spec:
+      containers:
+      - name: network-debug
+        image: nicolaka/netshoot
+        command:
+          - "/bin/bash"
+          - "-c"
+          - "sleep infinity"

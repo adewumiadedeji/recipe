@@ -1,0 +1,44 @@
+# Makefile
+.PHONY: build up down logs test clean
+
+build:
+	docker-compose build
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down
+
+logs:
+	docker-compose logs -f
+
+test:
+	docker-compose run user-service pytest
+	docker-compose run recipe-service pytest
+	docker-compose run ingredient-service pytest
+	docker-compose run rating-service pytest
+	docker-compose run mealplan-service pytest
+
+clean:
+	docker-compose down -v
+	docker system prune -f
+
+deploy:
+	cd services/auth && docker build -t deeaxfun2/auth:latest .
+	cd services/gateway && docker build -t deeaxfun2/gateway:latest .
+	cd services/ingredient && docker build -t deeaxfun2/ingredient:latest .
+	cd services/meal_plan && docker build -t deeaxfun2/meal_plan:latest .
+	cd services/rating && docker build -t deeaxfun2/rating:latest .
+	cd services/recipe && docker build -t deeaxfun2/recipe:latest .
+	cd services/notification && docker build -t deeaxfun2/notification:latest .
+
+deploy:
+	cd services/auth && docker push deeaxfun2/auth:latest
+	cd services/gateway && docker push deeaxfun2/gateway:latest
+	cd services/ingredient && docker push deeaxfun2/ingredient:latest
+	cd services/meal_plan && docker push deeaxfun2/meal_plan:latest
+	cd services/rating && docker push deeaxfun2/rating:latest
+	cd services/recipe && docker push deeaxfun2/recipe:latest
+	cd services/notification && docker push deeaxfun2/notification:latest
+

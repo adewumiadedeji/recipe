@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingredient-deployment
+  labels:
+    app: ingredient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingredient
+  template:
+    metadata:
+      labels:
+        app: ingredient
+    spec:
+      containers:
+      - name: ingredient
+        image: deeaxfun2/ingredient:latest
+        ports:
+        - containerPort: 8002
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: jwt-secret
+        - name: ALGORITHM
+          value: "HS256"
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          value: "30" 
+        - name: MYSQL_HOST
+          value: "192.168.194.14"  # MySQL service name
+        - name: MYSQL_PORT
+          value: "3306"        # MySQL default port
+        - name: MYSQL_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: database-name
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password

@@ -2,12 +2,12 @@ import os
 from typing import List
 from fastapi import HTTPException, APIRouter, Depends
 import fastapi as _fastapi
-from shared.email_service import send_email
+from utils.email_service import send_email
 import sqlalchemy.orm as _orm
 import service as _services
 import schemas as _schemas
 import logging
-import shared.database as _database
+import utils.database as _database
 from starlette.responses import RedirectResponse
 import json
 
@@ -33,7 +33,7 @@ async def health_check():
     
 
 # Endpoint to check if the API is live
-@router.post("/meal-plan/", response_model=_schemas.Meal)
+@router.post("/meal-plans", response_model=_schemas.Meal)
 async def create_recipe(
     meal: _schemas.MealCreate,
     db: _orm.Session = _fastapi.Depends(_database.get_db),

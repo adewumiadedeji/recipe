@@ -1,25 +1,32 @@
-# Makefile
-.PHONY: build up down logs test clean
+# Define variables for services and Docker registry
+SERVICES = auth gateway ingredient meal_plan rating recipe notification
+REGISTRY = deeaxfun2
 
-build:
-	docker-compose build
+# Default target
+.PHONY: all
+all: build push deploy
 
-up:
-	docker-compose up -d
+# Build all services
+.PHONY: build
+build: $(SERVICES:%=build-%)
 
-down:
-	docker-compose down
+# Push all services
+.PHONY: push
+push: $(SERVICES:%=push-%)
 
-logs:
-	docker-compose logs -f
+# Deploy Kubernetes configuration
+.PHONY: deploy
+deploy:
+	cd kubernetes && kubectl apply -f .
 
-test:
-	docker-compose run user-service pytest
-	docker-compose run recipe-service pytest
-	docker-compose run ingredient-service pytest
-	docker-compose run rating-service pytest
-	docker-compose run mealplan-service pytest
+# Define build and push targets for each service
+$(SERVICES:%=build-%): build-%:
+	cd services/$* && docker build -t $(REGISTRY)/$*:latest .
 
-clean:
-	docker-compose down -v
-	docker system prune -f
+$(SERVICES:%=push-%): push-%:
+	cd services/$* && docker push $(REGISTRY)/$*:latest
+
+# Individual service build
+.PHONY: $(SERVICES:%=build-%)
+# Individual service push
+.PHONY: $(SERVICES:%=push-%)
