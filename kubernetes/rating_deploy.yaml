@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: rating
-        image: deeaxfun2/rating:latest
+        image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/rating:latest
         ports:
         - containerPort: 8005
         readinessProbe:
@@ -27,7 +27,10 @@ spec:
           periodSeconds: 5
         env:
         - name: RECIPE_SERVICE_HOST_URL
-          value: "http://192.168.194.28/api/v1"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: recipe
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -40,7 +43,10 @@ spec:
         - name: RABBITMQ_HOST
           value: "rabbitmq"
         - name: MYSQL_HOST
-          value: "192.168.194.14"  # MySQL service name
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db-host
         - name: MYSQL_PORT
           value: "3306"        # MySQL default port
         - name: MYSQL_NAME

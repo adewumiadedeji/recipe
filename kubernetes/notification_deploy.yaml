@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: notification
-        image: deeaxfun2/notification:latest
+        image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/notification:latest
         ports:
         - containerPort: 8004
         readinessProbe:
@@ -44,7 +44,10 @@ spec:
               name: db-secret
               key: sender-password
         - name: MYSQL_HOST
-          value: "192.168.194.14"  # MySQL service name
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db-host
         - name: MYSQL_PORT
           value: "3306"        # MySQL default port
         - name: MYSQL_NAME
