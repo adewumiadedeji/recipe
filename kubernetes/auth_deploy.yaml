@@ -15,6 +15,8 @@ spec:
         app: auth
     spec:
       dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: ocir-secret
       containers:
       - name: auth
         image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/auth:latest

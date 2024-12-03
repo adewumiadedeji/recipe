@@ -14,6 +14,8 @@ spec:
       labels:
         app: gateway
     spec:
+      imagePullSecrets:
+      - name: ocir-secret
       containers:
       - name: gateway
         image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/gateway:latest
@@ -44,7 +46,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: db-secret
-              key: rating
+              key: ratings
         - name: NOTIFICATION_SERVICE_HOST_URL
           valueFrom:
             secretKeyRef:

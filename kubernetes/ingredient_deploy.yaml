@@ -14,6 +14,8 @@ spec:
       labels:
         app: ingredient
     spec:
+      imagePullSecrets:
+      - name: ocir-secret
       containers:
       - name: ingredient
         image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/ingredient:latest
