@@ -16,15 +16,15 @@ spec:
     spec:
       dnsPolicy: ClusterFirst
       imagePullSecrets:
-      - name: ocir-secret
+        - name: regcred
       containers:
       - name: auth
-        image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/auth:latest
+        image: deeaxfun2/auth:latest
         ports:
         - containerPort: 8001
         readinessProbe:
           httpGet:
-            path: /api/v1/health
+            path: /api/v1/check_api
             port: 8001  # Changed from 80 to 8001
           initialDelaySeconds: 5
           periodSeconds: 5

@@ -15,18 +15,13 @@ spec:
         app: notification
     spec:
       imagePullSecrets:
-      - name: ocir-secret
+      - name: regcred
       containers:
       - name: notification
-        image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/notification:latest
+        image: deeaxfun2/notification:latest
         ports:
         - containerPort: 8004
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        readinessProbe: null
         env:
         - name: SMTP_SERVER
           valueFrom:
@@ -67,3 +62,5 @@ spec:
             secretKeyRef:
               name: db-secret
               key: password
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"

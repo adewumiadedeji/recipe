@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-network-policy
+  namespace: default
+spec:
+  podSelector: {}  # Selects all pods in the namespace
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {}  # Allow traffic from any pod in the same namespace
+    - namespaceSelector: {}  # Allow traffic from any namespace (if needed)
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0  # Allow traffic to any destination

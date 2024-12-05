@@ -15,15 +15,15 @@ spec:
         app: mealplan
     spec:
       imagePullSecrets:
-      - name: ocir-secret
+      - name: regcred
       containers:
       - name: mealplan
-        image: eu-stockholm-1.ocir.io/axyklytnjcih/recipe-repo/meal_plan:latest
+        image: deeaxfun2@/mealplan:latest
         ports:
         - containerPort: 8003
         readinessProbe:
           httpGet:
-            path: /health
+            path: /api/v1/health
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5

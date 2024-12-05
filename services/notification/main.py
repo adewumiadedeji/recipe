@@ -9,7 +9,7 @@ RABBITMQ_URL = os.environ.get("RABBITMQ_URL")
 
 try:
     # rabbitmq connection
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='192.168.117.2'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_URL))
     channel = connection.channel()
 
     def callback(ch, method, properties, body):
